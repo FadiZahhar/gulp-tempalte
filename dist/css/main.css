@@ -1,4 +1,20 @@
 .card {
-  background-color: orange; }
+  background-color: purple; }
   .card .card-item {
-    font-size: 50px; }
+    font-size: 80px; }
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; }
+
+p {
+  font-size: 30px; }
+
+.title {
+  font-size: 100px;
+  color: green;
+  text-transform: uppercase; }
+
+/*# sourceMappingURL=main.css.map */
