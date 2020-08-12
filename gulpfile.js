@@ -9,6 +9,7 @@ const rename = require("gulp-rename");
 const concat = require("gulp-concat");
 const imagemin = require("gulp-imagemin");
 const cache = require("gulp-cache");
+const kit = require("gulp-kit");
 
 // Sass
 gulp.task("sass", function (done) {
@@ -68,6 +69,13 @@ gulp.task("imagemin", function (done) {
   done();
 });
 
+// HTML kit templating
+
+gulp.task("kit", function (done) {
+  return gulp.src("./html/**/*.kit").pipe(kit()).pipe(gulp.dest("./"));
+  done();
+});
+
 // Watch task with BrowserSync
 
 gulp.task("watch", function () {
@@ -81,12 +89,12 @@ gulp.task("watch", function () {
     .watch(
       [
         "./src/sass/**/*.scss",
-        "**/*.html",
+        "*./html/**/*.kit",
         "./src/less/styles.less",
         "./src/js/**/*.js",
         "./src/img/**/*.+(png|jpg|gif|svg)",
       ],
-      gulp.series(["sass", "less", "javascript", "imagemin"])
+      gulp.series(["sass", "less", "javascript", "imagemin", "kit"])
     )
     .on("change", browserSync.reload);
 });
