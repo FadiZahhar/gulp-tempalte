@@ -8,6 +8,7 @@ const uglify = require("gulp-uglify");
 const rename = require("gulp-rename");
 const concat = require("gulp-concat");
 const imagemin = require("gulp-imagemin");
+const cache = require("gulp-cache");
 
 // Sass
 gulp.task("sass", function (done) {
@@ -62,7 +63,7 @@ gulp.task("javascript", function (done) {
 gulp.task("imagemin", function (done) {
   return gulp
     .src("./src/img/**/*.+(png|jpg|gif|svg)")
-    .pipe(imagemin())
+    .pipe(cache(imagemin()))
     .pipe(gulp.dest("./dist/img/"));
   done();
 });
@@ -83,8 +84,16 @@ gulp.task("watch", function () {
         "**/*.html",
         "./src/less/styles.less",
         "./src/js/**/*.js",
+        "./src/img/**/*.+(png|jpg|gif|svg)",
       ],
-      gulp.series(["sass", "less", "javascript"])
+      gulp.series(["sass", "less", "javascript", "imagemin"])
     )
     .on("change", browserSync.reload);
 });
+
+gulp.task("clear-cache", function (done) {
+  return cache.clearAll(done);
+});
+
+// Gulp default command
+gulp.task("default", gulp.series(["watch"]));
