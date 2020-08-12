@@ -1,1 +1,4 @@
-alert("The alert.js was merged!");
+const message = () => {
+  console.log("The Javascript was trasnpiled! nows");
+};
+message();
