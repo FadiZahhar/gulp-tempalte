@@ -6,6 +6,8 @@ const less = require("gulp-less");
 const cssnano = require("gulp-cssnano");
 const uglify = require("gulp-uglify");
 const rename = require("gulp-rename");
+const concat = require("gulp-concat");
+const imagemin = require("gulp-imagemin");
 
 // Sass
 gulp.task("sass", function (done) {
@@ -40,9 +42,12 @@ gulp.task("less", function (done) {
 });
 
 // Javascript
+// alternative src example as an array for order of concatination
+//.src["./src/js/project.js","./src/js/alert.js"]
 gulp.task("javascript", function (done) {
   return gulp
     .src("./src/js/**/*.js")
+    .pipe(concat("project.js"))
     .pipe(uglify())
     .pipe(
       rename({
@@ -50,6 +55,15 @@ gulp.task("javascript", function (done) {
       })
     )
     .pipe(gulp.dest("./dist/js"));
+  done();
+});
+
+// Images optimization
+gulp.task("imagemin", function (done) {
+  return gulp
+    .src("./src/img/**/*.+(png|jpg|gif|svg)")
+    .pipe(imagemin())
+    .pipe(gulp.dest("./dist/img/"));
   done();
 });
 
