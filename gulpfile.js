@@ -1,4 +1,7 @@
 const gulp = require("gulp");
+
+const { series, parallel, dest } = require("gulp");
+
 const sass = require("gulp-sass");
 const sourcemaps = require("gulp-sourcemaps");
 const browserSync = require("browser-sync").create();
@@ -35,8 +38,9 @@ const filesPath = {
 };
 
 // Sass
-gulp.task("sass", function (done) {
-  return gulp
+
+function sassTask(done) {
+  gulp
     .src([filesPath.sass, "!./src/sass/widget.scss"])
     .pipe(plumber({errorHandler: notifier.error}))
     .pipe(sourcemaps.init())
@@ -51,14 +55,15 @@ gulp.task("sass", function (done) {
         }
       })
     )
-    .pipe(gulp.dest("./dist/css"))
+    .pipe(dest("./dist/css"))
     .pipe(notifier.success("sass"));
   done();
-});
+}
 
 // Less
-gulp.task("less", function (done) {
-  return gulp
+
+function lessTask(done){
+  gulp
     .src(filesPath.less)
     .pipe(plumber({errorHandler: notifier.error}))
     .pipe(sourcemaps.init())
@@ -66,48 +71,38 @@ gulp.task("less", function (done) {
     .pipe(cssnano())
     .pipe(sourcemaps.write("."))
     .pipe(rename("./styles.min.css"))
-    .pipe(gulp.dest("./dist/css"));
+    .pipe(dest("./dist/css"));
   done();
-});
+}
 
 // Javascript
 // alternative src example as an array for order of concatination
 //.src["./src/js/project.js","./src/js/alert.js"]
-gulp.task("javascript", function (done) {
-  return gulp
-    .src(filesPath.js)
+function jsTask(done){
+  gulp
+    .src(filesPath.less)
     .pipe(plumber({errorHandler: notifier.error}))
-    .pipe(
-      babel({
-        presets: ["@babel/env"],
-      })
-    )
-    .pipe(concat("project.js"))
-    .pipe(uglify())
-    .pipe(
-      rename({
-        suffix: ".min",
-      })
-    )
-    .pipe(gulp.dest("./dist/js"))
-    .pipe(notifier.success("js"));
+    .pipe(sourcemaps.init())
+    .pipe(less())
+    .pipe(cssnano())
+    .pipe(sourcemaps.write("."))
+    .pipe(rename("./styles.min.css"))
+    .pipe(dest("./dist/css"));
   done();
-});
+}
 
 // Images optimization
-gulp.task("imagemin", function (done) {
-  return gulp
+function imagesTask(done) {
+  gulp
     .src(filesPath.images)
     .pipe(cache(imagemin()))
-    .pipe(gulp.dest("./dist/img/"));
+    .pipe(dest("./dist/img/"));
   done();
-});
+}
 
 // HTML kit templating
-
-gulp.task("kit", function (done) {
-  return (
-    gulp
+function kitTask(done){
+  gulp
       .src(filesPath.html)
       .pipe(plumber({errorHandler: notifier.error}))
       .pipe(kit())
@@ -116,15 +111,13 @@ gulp.task("kit", function (done) {
         collapseWhitespace: true,
       })
     )*/
-      .pipe(gulp.dest("./")) 
-      .pipe(notifier.success("kit"))    
-  );
+      .pipe(dest("./")) 
+      .pipe(notifier.success("kit"));
   done();
-});
+}
 
 // Watch task with BrowserSync
-
-gulp.task("watch", function () {
+function watch() {
   browserSync.init({
     server: {
       baseDir: "./",
@@ -140,38 +133,48 @@ gulp.task("watch", function () {
         filesPath.js,
         filesPath.images,
       ],
-      gulp.parallel(["sass", "less", "javascript", "imagemin", "kit"])
+      parallel([sassTask,lessTask,jsTask,imagesTask,kitTask])
     )
     .on("change", browserSync.reload);
-});
+}
 
-gulp.task("clear-cache", function (done) {
-  return cache.clearAll(done); 
-});
 
-// Serve
+function clearCache(done) {
+  return cache.clearAll(done);
+}
 
-gulp.task(
-  "serve",
-  gulp.parallel(["sass", "less", "javascript", "imagemin", "kit"])
-);
-
-// Gulp default command
-gulp.task("default", gulp.series(["serve", "watch"]));
 
 // zip project
-
-gulp.task("zip", function (done) {
-  return gulp
+function zipTask(done) {
+  gulp
     .src(["./**/*", "!./node_modules/**/*"])
     .pipe(zip("project.zip"))
-    .pipe(gulp.dest("./"));
+    .pipe(dest("./"));
   done();
-});
+}
 
 // Clean Dist
-
-gulp.task("clean-dist",function(done){
-  return gulp.src(["./dist/**/*"]);
+function clean(done){
+  del(["./dist/**/*"]);
   done();
-});
+}
+
+// Gulp individual tasks
+
+exports.sassTask = sassTask;
+exports.lessTask = lessTask;
+exports.jsTask = jsTask;
+exports.imagesTask = imagesTask;
+exports.kitTask = kitTask;
+exports.watch = watch;
+exports.clearCache = clearCache;
+exports.zipTask = zipTask;
+exports.clean = clean;
+
+// Gulp serve
+
+exports.build = parallel(sassTask,lessTask,jsTask,imagesTask,kitTask);
+
+// Gulp default command
+
+exports.default = series(exports.build, watch);
