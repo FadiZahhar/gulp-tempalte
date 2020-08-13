@@ -24,17 +24,17 @@ notifier.defaults({
   messages: {
     sass: "CSS was successfully compiled!",
     js: "Javascript is ready!",
-    kit: "HTML was delivered!"
+    kit: "HTML was delivered!",
   },
-  prefix: "====="
-})
+  prefix: "=====",
+});
 
 const filesPath = {
   sass: "./src/sass/**/*.scss",
   less: "./src/less/styles.less",
   js: "./src/js/**/*.js",
   images: "./src/img/**/*.+(png|jpg|gif|svg)",
-  html: "./html/**/*.kit",
+  html: "./src/html/**/*.kit",
 };
 
 // Sass
@@ -42,7 +42,7 @@ const filesPath = {
 function sassTask(done) {
   gulp
     .src([filesPath.sass, "!./src/sass/widget.scss"])
-    .pipe(plumber({errorHandler: notifier.error}))
+    .pipe(plumber({ errorHandler: notifier.error }))
     .pipe(sourcemaps.init())
     .pipe(autoprefixer())
     .pipe(sass())
@@ -62,10 +62,10 @@ function sassTask(done) {
 
 // Less
 
-function lessTask(done){
+function lessTask(done) {
   gulp
     .src(filesPath.less)
-    .pipe(plumber({errorHandler: notifier.error}))
+    .pipe(plumber({ errorHandler: notifier.error }))
     .pipe(sourcemaps.init())
     .pipe(less())
     .pipe(cssnano())
@@ -78,41 +78,46 @@ function lessTask(done){
 // Javascript
 // alternative src example as an array for order of concatination
 //.src["./src/js/project.js","./src/js/alert.js"]
-function jsTask(done){
+function jsTask(done) {
   gulp
-    .src(filesPath.less)
-    .pipe(plumber({errorHandler: notifier.error}))
-    .pipe(sourcemaps.init())
-    .pipe(less())
-    .pipe(cssnano())
-    .pipe(sourcemaps.write("."))
-    .pipe(rename("./styles.min.css"))
-    .pipe(dest("./dist/css"));
+    .src(filesPath.js)
+    .pipe(plumber({ errorHandler: notifier.error }))
+    .pipe(
+      babel({
+        presets: ["@babel/env"],
+      })
+    )
+    .pipe(concat("project.js"))
+    .pipe(uglify())
+    .pipe(
+      rename({
+        suffix: ".min",
+      })
+    )
+    .pipe(gulp.dest("./dist/js"))
+    .pipe(notifier.success("js"));
   done();
 }
 
 // Images optimization
 function imagesTask(done) {
-  gulp
-    .src(filesPath.images)
-    .pipe(cache(imagemin()))
-    .pipe(dest("./dist/img/"));
+  gulp.src(filesPath.images).pipe(cache(imagemin())).pipe(dest("./dist/img/"));
   done();
 }
 
 // HTML kit templating
-function kitTask(done){
+function kitTask(done) {
   gulp
-      .src(filesPath.html)
-      .pipe(plumber({errorHandler: notifier.error}))
-      .pipe(kit())
-      /*.pipe(
+    .src(filesPath.html)
+    .pipe(plumber({ errorHandler: notifier.error }))
+    .pipe(kit())
+    /*.pipe(
       htmlmin({
         collapseWhitespace: true,
       })
     )*/
-      .pipe(dest("./")) 
-      .pipe(notifier.success("kit"));
+    .pipe(dest("./dist"))
+    .pipe(notifier.success("kit"));
   done();
 }
 
@@ -120,7 +125,7 @@ function kitTask(done){
 function watch() {
   browserSync.init({
     server: {
-      baseDir: "./",
+      baseDir: "./dist",
     },
     browser: "chrome",
   });
@@ -133,16 +138,14 @@ function watch() {
         filesPath.js,
         filesPath.images,
       ],
-      parallel([sassTask,lessTask,jsTask,imagesTask,kitTask])
+      parallel([sassTask, lessTask, jsTask, imagesTask, kitTask])
     )
     .on("change", browserSync.reload);
 }
 
-
 function clearCache(done) {
   return cache.clearAll(done);
 }
-
 
 // zip project
 function zipTask(done) {
@@ -154,7 +157,7 @@ function zipTask(done) {
 }
 
 // Clean Dist
-function clean(done){
+function clean(done) {
   del(["./dist/**/*"]);
   done();
 }
@@ -173,7 +176,7 @@ exports.clean = clean;
 
 // Gulp serve
 
-exports.build = parallel(sassTask,lessTask,jsTask,imagesTask,kitTask);
+exports.build = parallel(sassTask, lessTask, jsTask, imagesTask, kitTask);
 
 // Gulp default command
 
