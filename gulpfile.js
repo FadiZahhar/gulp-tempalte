@@ -87,7 +87,7 @@ function jsTask(done) {
         presets: ["@babel/env"],
       })
     )
-    .pipe(concat("project.js"))
+    .pipe(concat("main.js"))
     .pipe(uglify())
     .pipe(
       rename({
